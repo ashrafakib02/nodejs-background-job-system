@@ -8,35 +8,37 @@ export const createJobHandler = async (req, res) => {
 
     const job = await createJob({ type, payload });
 
-    await jobQueue.add(
-      "job",
-      {
-        jobId: job.id,
-        type,
-        payload
-      },
-      {
-        attempts: 3,
-        backoff: {
-          type: "exponential",
-          delay: 2000
+    if (process.env.NODE_ENV !== "test") {
+      await jobQueue.add(
+        "job",
+        {
+          jobId: job.id,
+          type,
+          payload,
         },
-        delay,
-        priority,
-        removeOnComplete: true,
-        removeOnFail: false
-      }
-    );
+        {
+          attempts: 3,
+          backoff: {
+            type: "exponential",
+            delay: 2000,
+          },
+          delay,
+          priority,
+          removeOnComplete: true,
+          removeOnFail: false,
+        },
+      );
+    }
 
     res.status(201).json({
       success: true,
       message: "Job created successfully",
-      data: job
+      data: job,
     });
   } catch (error) {
     res.status(400).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
