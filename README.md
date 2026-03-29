@@ -166,8 +166,8 @@ tests/
 
 ### 1. Clone the repository
 
-git clone <your-repo-url>
-cd nodejs-background-job-system
+- git clone <your-repo-url>
+- cd nodejs-background-job-system
 
 ### 1. Install dependencies
 
@@ -179,8 +179,8 @@ Create a .env file from .env.example
 
 ### 1. Run Prisma migration
 
-npx prisma migrate dev
-npx prisma generate
+- npx prisma migrate dev
+- npx prisma generate
 
 ### 1. Start Redis
 
@@ -196,27 +196,27 @@ node src/workers/jobWorker.js
 
 ## Scripts
 
-npm run dev        # Start development server
-npm start          # Start production server
-npm test           # Run tests
-npm run lint       # Run ESLint
-npm run format     # Format code with Prettier
+- npm run dev        # Start development server
+- npm start          # Start production server
+- npm test           # Run tests
+- npm run lint       # Run ESLint
+- npm run format     # Format code with Prettier
 
 ## Test Coverage
 
 Includes API and service-level tests for:
 
-job creation
-invalid input
-job listing
-pagination
-filtering
-get job by ID
-not found cases
+- job creation
+- invalid input
+- job listing
+- pagination
+- filtering
+- get job by ID
+- not found cases
 
 ## Future Improvements
-queue dashboard
-dead-letter queue
-multiple worker types
-email/SMS provider integration
-deployment with Docker
+- queue dashboard
+- dead-letter queue
+- multiple worker types
+- email/SMS provider integration
+- deployment with Docker
