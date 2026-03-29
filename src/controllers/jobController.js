@@ -3,7 +3,7 @@ import { createJob } from "../services/jobService.js";
 
 export const createJobHandler = async (req, res) => {
   try {
-    const { type, payload } = req.body;
+    const { type, payload, delay = 0, priority = 0  } = req.body;
 
     if (!type) {
       return res.status(400).json({
@@ -16,11 +16,25 @@ export const createJobHandler = async (req, res) => {
     const job = await createJob({ type, payload });
 
     // push to queue
-    await jobQueue.add("job", {
-      jobId: job.id,
-      type,
-      payload
-    });
+   await jobQueue.add(
+  "job",
+  {
+    jobId: job.id,
+    type,
+    payload
+  },
+  {
+    attempts: 3,
+    backoff: {
+      type: "exponential",
+      delay: 2000
+    },
+    delay,
+    priority,
+    removeOnComplete: true,
+    removeOnFail: false
+  }
+);
 
     res.status(201).json({
       success: true,
