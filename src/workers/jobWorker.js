@@ -1,73 +1,33 @@
 import { Worker } from "bullmq";
 import { redisConnection } from "../config/redis.js";
-import prisma from "../config/prisma.js";
+import { processJob, markJobFailed } from "../services/workerService.js";
 
 const worker = new Worker(
   "jobQueue",
   async (job) => {
-    console.log("Processing job:", job.data);
-
-    const { jobId, type, payload } = job.data;
     const start = Date.now();
-    const duration = Date.now() - start;
-    console.log(`Job ${jobId} took ${duration}ms`);
+    const { jobId, type, payload } = job.data;
 
-    
+    console.log(`Processing job ${job.id}, attempt ${job.attemptsMade + 1}`);
+
     try {
-      await prisma.job.update({
-        where: { id: jobId },
-        data: { status: "processing" },
-      });
+      await processJob({ jobId, type, payload });
 
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      console.log("Job type inside worker:", type);
-      if (type === "email") {
-        console.log("Sending email to:", payload.to);
-      } else {
-        throw new Error("Unknown job type");
-      }
-
-      await prisma.job.update({
-        where: { id: jobId },
-        data: {
-          status: "failed",
-          failedReason: error.message,
-        },
-      });
-
-      console.log("Job completed:", jobId);
-
-      await jobQueue.add(
-        "job",
-        {
-          jobId: job.id,
-          type,
-          payload,
-        },
-        {
-          attempts: 3,
-          backoff: {
-            type: "exponential",
-            delay: 2000,
-          },
-          removeOnComplete: true,
-          removeOnFail: false,
-        },
-      );
+      const duration = Date.now() - start;
+      console.log(`Job ${jobId} completed in ${duration}ms`);
     } catch (error) {
-      console.error("Job failed:", jobId, error.message);
+      console.error(`Job ${jobId} failed on attempt ${job.attemptsMade + 1}`);
 
-      await prisma.job.update({
-        where: { id: jobId },
-        data: { status: "failed", failedReason: error.message },
-      });
+      if (job.attemptsMade + 1 >= job.opts.attempts) {
+        await markJobFailed(jobId, error.message);
+      }
 
       throw error;
     }
   },
   {
-    connection: redisConnection,
-  },
+    connection: redisConnection
+  }
 );
 
 worker.on("completed", (job) => {
@@ -75,5 +35,5 @@ worker.on("completed", (job) => {
 });
 
 worker.on("failed", (job, err) => {
-  console.log(`Worker: Job ${job?.id} failed`, err.message);
+  console.log(`Worker: Job ${job.id} failed`, err.message);
 });
