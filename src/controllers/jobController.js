@@ -8,7 +8,7 @@ export const createJobHandler = async (req, res) => {
 
     const job = await createJob({ type, payload });
 
-    if (process.env.NODE_ENV !== "test") {
+    if (process.env.NODE_ENV !== "test" && jobQueue) {
       await jobQueue.add(
         "job",
         {

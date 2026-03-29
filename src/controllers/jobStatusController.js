@@ -2,7 +2,6 @@ import prisma from "../config/prisma.js";
 import { jobQuerySchema } from "../validators/jobQueryValidator.js";
 import { getJobs } from "../services/jobService.js";
 
-
 export const getJobStatus = async (req, res) => {
   const job = await prisma.job.findUnique({
     where: { id: Number(req.params.id) }
@@ -15,26 +14,25 @@ export const getJobStatus = async (req, res) => {
     });
   }
 
- res.json({
-  success: true,
-  message: "Job fetched successfully",
-  data: {
-    id: job.id,
-    type: job.type,
-    status: job.status,
-    failedReason: job.failedReason,
-    createdAt: job.createdAt
-  }
-});
+  res.status(200).json({
+    success: true,
+    message: "Job fetched successfully",
+    data: {
+      id: job.id,
+      type: job.type,
+      status: job.status,
+      failedReason: job.failedReason,
+      createdAt: job.createdAt
+    }
+  });
 };
 
 export const getAllJobs = async (req, res) => {
   try {
     const query = jobQuerySchema.parse(req.query);
-
     const result = await getJobs(query);
 
-    res.json({
+    res.status(200).json({
       success: true,
       message: "Jobs fetched successfully",
       ...result
